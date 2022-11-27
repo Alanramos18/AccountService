@@ -1,0 +1,32 @@
+﻿<Project>
+  
+  <ItemGroup Label="System">
+    <PackageReference Update="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Update="System.Configuration.ConfigurationManager" Version="6.0.0" />
+    <PackageReference Update="System.Data.SqlClient" Version="4.8.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Microsoft">
+    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="5.0.13" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.13" />
+    <PackageReference Update="Microsoft.Extensions.Configuration" Version="6.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Update="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+    <PackageReference Update="Microsoft.Extensions.Options" Version="6.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup Label="Others">
+    <PackageReference Update="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Test">
+    <PackageReference Update="JustMock" Version="2021.3.1110.2" />
+    <PackageReference Update="NUnit" Version="3.12.0" />
+    <PackageReference Update="NUnit3TestAdapter" Version="3.16.1" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+  </ItemGroup>
+
+</Project>
