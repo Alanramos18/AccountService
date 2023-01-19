@@ -35,5 +35,10 @@ namespace Account.Business.Services
                 throw;
             }
         }
+
+        public async Task LoginAsync()
+        {
+
+        }
     }
 }

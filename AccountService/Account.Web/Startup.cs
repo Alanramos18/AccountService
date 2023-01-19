@@ -21,24 +21,37 @@ namespace Account.Web
 
         public IConfiguration Configuration { get; }
 
+        private readonly string _policies = "unlamCors";
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddContextConfiguration();
+            //services.AddContextConfiguration();
 
             AddSwagger(services);
             ConfigureIoC(services);
 
-            services.AddAuthentication("MyCookieAuth").AddCookie("MyCookieAuth", opt => {
-                opt.Cookie.Name = "MyCookieAuth";
-                opt.LoginPath = "/WeatherForecast";
-                opt.AccessDeniedPath = "/NO";
-            });
+            //services.AddAuthentication("MyCookieAuth").AddCookie("MyCookieAuth", opt => {
+            //    opt.Cookie.Name = "MyCookieAuth";
+            //    opt.LoginPath = "/WeatherForecast";
+            //    opt.AccessDeniedPath = "/NO";
+            //});
 
-            services.AddAuthorization(option => {
-                option.AddPolicy("MustBelongToHR",
-                    policy => policy.RequireClaim("Department", "HR"));
+            //services.AddAuthorization(option => {
+            //    option.AddPolicy("MustBelongToHR",
+            //        policy => policy.RequireClaim("Department", "HR"));
+            //});
+
+            services.AddCors(options =>
+            {
+                // this defines a CORS policy called "default"
+                options.AddPolicy(_policies, policy =>
+                {
+                    policy.WithOrigins("http://localhost:8100")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
             });
         }
 
@@ -49,6 +62,8 @@ namespace Account.Web
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseCors(_policies);
 
             app.UseHttpsRedirection();
 
@@ -69,6 +84,7 @@ namespace Account.Web
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
                 options.RoutePrefix = string.Empty;
             });
+
         }
 
         private void AddSwagger(IServiceCollection services)
@@ -100,17 +116,17 @@ namespace Account.Web
                     .AsImplementedInterfaces()
                     .WithScopedLifetime());
 
-            services.Scan(scan =>
-                scan.FromAssemblyOf<AccountService>()
-                    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
-                    .AsImplementedInterfaces()
-                    .WithScopedLifetime());
+            //services.Scan(scan =>
+            //    scan.FromAssemblyOf<AccountService>()
+            //        .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
+            //        .AsImplementedInterfaces()
+            //        .WithScopedLifetime());
 
-            services.Scan(scan =>
-                scan.FromAssemblyOf<AccountRepository>()
-                    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
-                    .AsImplementedInterfaces()
-                    .WithScopedLifetime());
+            //services.Scan(scan =>
+            //    scan.FromAssemblyOf<AccountRepository>()
+            //        .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
+            //        .AsImplementedInterfaces()
+            //        .WithScopedLifetime());
         }
     }
 }

@@ -13,5 +13,8 @@ namespace Account.Business.Services.Interfaces
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Created account dto</returns>
         Task<CreatedAccountDto> CreateAccountAsync(CreateAccountDto accountDto, CancellationToken cancellationToken);
+
+
+        Task<CreatedAccountDto> LoginAsync(CreateAccountDto accountDto, CancellationToken cancellationToken);
     }
 }

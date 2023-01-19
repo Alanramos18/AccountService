@@ -1,5 +1,8 @@
 ﻿namespace Account.Dto.WebDtos
 {
+    /// <summary>
+    ///     Request create account dto
+    /// </summary>
     public class CreateAccountDto
     {
         public string UserName { get; set; }

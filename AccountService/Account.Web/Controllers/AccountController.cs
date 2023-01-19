@@ -22,15 +22,15 @@ namespace Account.Web.Controllers
     //[Authorize(Policy = "MustBelongToHR")]
     public class AccountController : ControllerBase
     {
-        private readonly IAccountService _accountService;
+        //private readonly IAccountService _accountService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
 
         public Credential Credential { get; set; }
 
-        public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
+        public AccountController(IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
-            _accountService = accountService;
+            //_accountService = accountService;
             _accountValidation = accountValidation;
             _logger = logger;
             
@@ -59,9 +59,9 @@ namespace Account.Web.Controllers
             {
                 _accountValidation.Validate(createAccountDto);
 
-                var response = await _accountService.CreateAccountAsync(createAccountDto, cancellationToken);
+                //var response = await _accountService.CreateAccountAsync(createAccountDto, cancellationToken);
 
-                return new OkObjectResult(response);
+                return new OkObjectResult("okas");
             }
             catch (AccountException ex)
             {
@@ -70,9 +70,40 @@ namespace Account.Web.Controllers
         }
 
         [HttpGet]
+        [Route("/login/{username}/{password}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        public async Task<IActionResult> LoginAsync([FromRoute]string username, [FromRoute] string password, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                ValidateUser(username);
+                ValidatePassword(password);
+
+                await Task.Delay(100);
+
+                return new OkObjectResult("ok, todo piola");
+            }
+            catch (AccountException ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
+        private void ValidatePassword(string username)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ValidateUser(string username)
+        {
+            throw new NotImplementedException();
+        }
+
+        [HttpGet]
         public async Task<IEnumerable<WeatherForecast>> GetAsync()
         {
-            await VerifyUserAsync();
+            //await VerifyUserAsync();
 
             var rng = new Random();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast

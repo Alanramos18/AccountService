@@ -1,5 +1,7 @@
 ﻿using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace Account.Data.Extension
 {
@@ -9,12 +11,16 @@ namespace Account.Data.Extension
         ///     Register all the configuration of the context.
         /// </summary>
         /// <param name="services">Service Collection</param>
-        public static void AddContextConfiguration(this IServiceCollection services)
+        public static void AddContextConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
-            services.AddSingleton<IAccountContext, AccountContext>();
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+
+            services.AddDbContext<AccountContext>(options => options.UseSqlServer(configuration.GetConnectionString("ChatConnection")));
+            services.AddScoped<IAccountContext, AccountContext>();
         }
     }
 }
