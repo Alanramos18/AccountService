@@ -14,7 +14,13 @@ namespace Account.Business.Services.Interfaces
         /// <returns>Created account dto</returns>
         Task<CreatedAccountDto> CreateAccountAsync(CreateAccountDto accountDto, CancellationToken cancellationToken);
 
-
-        Task<CreatedAccountDto> LoginAsync(CreateAccountDto accountDto, CancellationToken cancellationToken);
+        /// <summary>
+        ///     Login user to get token.
+        /// </summary>
+        /// <param name="username">User name</param>
+        /// <param name="password">Password</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns></returns>
+        Task LoginAsync(string username, string password, CancellationToken cancellationToken);
     }
 }

@@ -22,6 +22,14 @@ namespace Account.Data.Repositories.Interfaces
         Task<AccountEntity> GetByIdAsync(int entityId, CancellationToken cancellationToken);
 
         /// <summary>
+        ///     Get user by username.
+        /// </summary>
+        /// <param name="username">User name</param>
+        /// <param name="cancellationToken">Cancellation Transaction Token</param>
+        /// <returns></returns>
+        Task<AccountEntity> GetByUsernameAsync(string username, CancellationToken cancellationToken);
+
+        /// <summary>
         ///     Adds the specific entity.
         /// </summary>
         /// <param name="entity">Entity to be added</param>

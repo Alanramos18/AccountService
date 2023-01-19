@@ -1,19 +1,23 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using Account.Business.Exceptions;
+using Account.Business.Helpers;
 using Account.Business.Mappers.CreateAccount;
 using Account.Business.Services.Interfaces;
 using Account.Data.Repositories.Interfaces;
 using Account.Dto.WebDtos;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Account.Business.Services
 {
-    public class AccountService : IAccountService
+    internal class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
-        
-        public AccountService(IAccountRepository accountRepository)
+        private readonly IEncryption _encryption;
+
+        public AccountService(IAccountRepository accountRepository, IEncryption encryption)
         {
             _accountRepository = accountRepository;
+            _encryption = encryption;
         }
 
         /// <inheritdoc />
@@ -36,9 +40,21 @@ namespace Account.Business.Services
             }
         }
 
-        public async Task LoginAsync()
+        /// <inheritdoc />
+        public async Task LoginAsync(string username, string password, CancellationToken cancellationToken)
         {
+            var user = await _accountRepository.GetByUsernameAsync(username, cancellationToken);
 
+            if (user == null || _encryption.Verify(password, user.Hash))
+            {
+                throw new AccountException("El usuario o la contraseña son incorrectos");
+            }
+
+            // Generate JWT
+
+            // map response
+
+            // return response
         }
     }
 }

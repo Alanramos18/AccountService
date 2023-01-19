@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Account.Data.Entities;
@@ -30,6 +31,11 @@ namespace Account.Data.Repositories
         public virtual async Task<AccountEntity> GetByIdAsync(int entityId, CancellationToken cancellationToken)
         {
             return await _context.Set<AccountEntity>().FindAsync(new object[] { entityId }, cancellationToken);
+        }
+
+        public virtual async Task<AccountEntity> GetByUsernameAsync(string username, CancellationToken cancellationToken)
+        {
+            return await Get().FirstOrDefaultAsync(x => x.UserName.Equals(username), cancellationToken);
         }
 
         /// <inheritdoc />

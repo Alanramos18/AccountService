@@ -1,5 +1,5 @@
-﻿using Account.Dto.WebDtos;
-using Account.Web.Exceptions;
+﻿using Account.Business.Exceptions;
+using Account.Dto.WebDtos;
 using Account.Web.Validations.Interfaces;
 
 namespace Account.Web.Validations
@@ -12,6 +12,14 @@ namespace Account.Web.Validations
             ValidateUserName(createAccountDto.UserName);
             ValidatePassword(createAccountDto.Password);
             ValidateApplication(createAccountDto.Application);
+        }
+
+        /// <inheritdoc/>
+        public void ValidateLogin(string username, string password)
+        {
+            ValidateUserName(username);
+            ValidatePassword(password);
+            //ValidateApplication(createAccountDto.Application);
         }
 
         /// <summary>

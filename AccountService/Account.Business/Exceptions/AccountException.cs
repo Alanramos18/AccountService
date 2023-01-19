@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Account.Web.Exceptions
+namespace Account.Business.Exceptions
 {
     public class AccountException : Exception
     {

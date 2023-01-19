@@ -15,9 +15,9 @@ namespace Account.Data.Entities
         public string UserName { get; set; }
 
         /// <summary>
-        ///     Password of the account.
+        ///     Hash of the account.
         /// </summary>
-        public string Password { get; set; }
+        public string Hash { get; set; }
 
         /// <summary>
         ///     Email of the account.

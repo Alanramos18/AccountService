@@ -5,9 +5,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Account.Business.Exceptions;
 using Account.Business.Services.Interfaces;
 using Account.Dto.WebDtos;
-using Account.Web.Exceptions;
 using Account.Web.Validations.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -69,16 +69,25 @@ namespace Account.Web.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("/login/{username}/{password}")]
+        /// <summary>
+        ///     Login users.
+        /// </summary>
+        /// <param name="dto">Login dto</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>JWT Token</returns>
+        /// <response code="200">Ok.</response>
+        /// <response code="400">Bad Request.</response>
+        [HttpPost]
+        [Route("/login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<IActionResult> LoginAsync([FromRoute]string username, [FromRoute] string password, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> LoginAsync(LoginDto dto, CancellationToken cancellationToken = default)
         {
             try
             {
-                ValidateUser(username);
-                ValidatePassword(password);
+                ValidateUser(dto.UserName);
+                ValidatePassword(dto.Password);
+
 
                 await Task.Delay(100);
 

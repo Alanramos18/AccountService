@@ -13,7 +13,7 @@ namespace Account.Business.Mappers.CreateAccount
             var account = new AccountEntity
             {
                 UserName = dto.UserName,
-                Password = dto.Password,
+                //Password = dto.Password,
                 Application = dto.Application
             };
 
