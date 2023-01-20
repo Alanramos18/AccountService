@@ -2,6 +2,8 @@ using System;
 using Account.Business.Services;
 using Account.Data.Extension;
 using Account.Data.Repositories;
+using Account.Web.Controllers;
+using Account.Web.Middlewares;
 using Account.Web.Validations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -62,6 +64,8 @@ namespace Account.Web
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseMiddleware<GetApplicationMiddleware>();
 
             app.UseCors(_policies);
 

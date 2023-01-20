@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace Account.Web.Controllers
 {
@@ -22,15 +23,15 @@ namespace Account.Web.Controllers
     //[Authorize(Policy = "MustBelongToHR")]
     public class AccountController : ControllerBase
     {
-        private readonly IAccountService _accountService;
+        //private readonly IAccountService _accountService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
 
         public Credential Credential { get; set; }
 
-        public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
+        public AccountController(IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
-            _accountService = accountService;
+            //_accountService = accountService;
             _accountValidation = accountValidation;
             _logger = logger;
             
