@@ -33,9 +33,9 @@ namespace Account.Data.Repositories
             return await _context.Set<AccountEntity>().FindAsync(new object[] { entityId }, cancellationToken);
         }
 
-        public virtual async Task<AccountEntity> GetByUsernameAsync(string username, CancellationToken cancellationToken)
+        public virtual async Task<AccountEntity> GetByEmailAsync(string email, CancellationToken cancellationToken)
         {
-            return await Get().FirstOrDefaultAsync(x => x.UserName.Equals(username), cancellationToken);
+            return await Get().FirstOrDefaultAsync(x => x.Email.Equals(email), cancellationToken);
         }
 
         /// <inheritdoc />

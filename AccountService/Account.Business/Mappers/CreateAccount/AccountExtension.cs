@@ -13,7 +13,7 @@ namespace Account.Business.Mappers.CreateAccount
             var dto = new CreatedAccountDto
             {
                 Id = account.Id,
-                UserName = account.UserName
+                Email = account.Email
             };
 
             return dto;

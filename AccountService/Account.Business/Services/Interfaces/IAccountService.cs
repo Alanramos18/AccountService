@@ -20,7 +20,7 @@ namespace Account.Business.Services.Interfaces
         /// <param name="username">User name</param>
         /// <param name="password">Password</param>
         /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns></returns>
-        Task LoginAsync(string username, string password, CancellationToken cancellationToken);
+        /// <returns>JWT string</returns>
+        Task<string> LoginAsync(LoginDto dto, CancellationToken cancellationToken);
     }
 }

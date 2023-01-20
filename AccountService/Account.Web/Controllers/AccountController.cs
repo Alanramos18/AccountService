@@ -22,15 +22,15 @@ namespace Account.Web.Controllers
     //[Authorize(Policy = "MustBelongToHR")]
     public class AccountController : ControllerBase
     {
-        //private readonly IAccountService _accountService;
+        private readonly IAccountService _accountService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
 
         public Credential Credential { get; set; }
 
-        public AccountController(IAccountValidation accountValidation, ILogger<AccountController> logger)
+        public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
-            //_accountService = accountService;
+            _accountService = accountService;
             _accountValidation = accountValidation;
             _logger = logger;
             
@@ -81,17 +81,17 @@ namespace Account.Web.Controllers
         [Route("/login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<IActionResult> LoginAsync(LoginDto dto, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<string>> LoginAsync(LoginDto dto, CancellationToken cancellationToken = default)
         {
             try
             {
-                ValidateUser(dto.UserName);
-                ValidatePassword(dto.Password);
+                //ValidateUser(dto.UserName);
+                //ValidatePassword(dto.Password);
 
+                //var response = await _accountService.LoginAsync(dto, cancellationToken);
 
-                await Task.Delay(100);
-
-                return new OkObjectResult("ok, todo piola");
+                //return new OkObjectResult(response);
+                return new OkObjectResult("asd");
             }
             catch (AccountException ex)
             {

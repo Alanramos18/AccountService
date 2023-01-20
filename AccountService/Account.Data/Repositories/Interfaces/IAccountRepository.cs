@@ -22,12 +22,12 @@ namespace Account.Data.Repositories.Interfaces
         Task<AccountEntity> GetByIdAsync(int entityId, CancellationToken cancellationToken);
 
         /// <summary>
-        ///     Get user by username.
+        ///     Get email by username.
         /// </summary>
-        /// <param name="username">User name</param>
+        /// <param name="email">Email</param>
         /// <param name="cancellationToken">Cancellation Transaction Token</param>
         /// <returns></returns>
-        Task<AccountEntity> GetByUsernameAsync(string username, CancellationToken cancellationToken);
+        Task<AccountEntity> GetByEmailAsync(string email, CancellationToken cancellationToken);
 
         /// <summary>
         ///     Adds the specific entity.

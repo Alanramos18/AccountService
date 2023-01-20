@@ -1,6 +1,6 @@
 ﻿namespace Account.Business.Helpers
 {
-    internal interface IEncryption
+    public interface IEncryption
     {
         /// <summary>
         ///     Hash password.

@@ -7,17 +7,7 @@ namespace Account.Data.Entities
         /// <summary>
         ///     Id of the account.
         /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
-        ///     User name of the account.
-        /// </summary>
-        public string UserName { get; set; }
-
-        /// <summary>
-        ///     Hash of the account.
-        /// </summary>
-        public string Hash { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         ///     Email of the account.
@@ -25,8 +15,13 @@ namespace Account.Data.Entities
         public string Email { get; set; }
 
         /// <summary>
-        ///     Application the account is using.
+        ///     Hash of the account.
         /// </summary>
-        public string Application { get; set; }
+        public string Hash { get; set; }
+
+        /// <summary>
+        ///     Application code the account is using.
+        /// </summary>
+        public string ApplicationCode { get; set; }
     }
 }

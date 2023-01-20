@@ -7,7 +7,7 @@ namespace Account.Dto.WebDtos
     /// </summary>
     public class CreatedAccountDto
     {
-        public Guid Id { get; set; }
-        public string UserName { get; set; }
+        public int Id { get; set; }
+        public string Email { get; set; }
     }
 }

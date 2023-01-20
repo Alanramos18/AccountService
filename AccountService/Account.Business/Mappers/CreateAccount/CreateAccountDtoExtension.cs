@@ -12,9 +12,9 @@ namespace Account.Business.Mappers.CreateAccount
 
             var account = new AccountEntity
             {
-                UserName = dto.UserName,
+                Email = dto.UserName,
                 //Password = dto.Password,
-                Application = dto.Application
+                ApplicationCode = dto.Application
             };
 
             return account;

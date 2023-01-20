@@ -6,9 +6,9 @@
     public class LoginDto
     {
         /// <summary>
-        ///     User name.
+        ///     Email.
         /// </summary>
-        public string UserName { get; set; }
+        public string Email { get; set; }
 
         /// <summary>
         ///     Password.
