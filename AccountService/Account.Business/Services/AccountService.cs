@@ -1,7 +1,9 @@
-﻿using Account.Business.Exceptions;
+﻿using Account.Business.Enums;
+using Account.Business.Exceptions;
 using Account.Business.Helpers;
 using Account.Business.Mappers.CreateAccount;
 using Account.Business.Services.Interfaces;
+using Account.Data.Entities;
 using Account.Data.Repositories.Interfaces;
 using Account.Dto.WebDtos;
 using Microsoft.Extensions.Configuration;
@@ -50,7 +52,7 @@ namespace Account.Business.Services
         }
 
         /// <inheritdoc />
-        public async Task<string> LoginAsync(LoginDto loginDto, CancellationToken cancellationToken)
+        public async Task<string> LoginAsync(LoginDto loginDto, ApplicationCode code, CancellationToken cancellationToken)
         {
             var user = await _accountRepository.GetByEmailAsync(loginDto.Email, cancellationToken);
 
@@ -60,7 +62,7 @@ namespace Account.Business.Services
             }
 
             var jwt = CreateToken();
-            
+
             // map response
 
             return jwt;

@@ -15,10 +15,10 @@ namespace Account.Web.Validations
         }
 
         /// <inheritdoc/>
-        public void ValidateLogin(string username, string password)
+        public void ValidateLogin(LoginDto loginDto)
         {
-            ValidateUserName(username);
-            ValidatePassword(password);
+            ValidateUserName(loginDto.Email);
+            ValidatePassword(loginDto.Password);
             //ValidateApplication(createAccountDto.Application);
         }
 

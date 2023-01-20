@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Account.Business.Enums;
 using Account.Dto.WebDtos;
 
 namespace Account.Business.Services.Interfaces
@@ -21,6 +22,6 @@ namespace Account.Business.Services.Interfaces
         /// <param name="password">Password</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>JWT string</returns>
-        Task<string> LoginAsync(LoginDto dto, CancellationToken cancellationToken);
+        Task<string> LoginAsync(LoginDto dto, ApplicationCode code, CancellationToken cancellationToken);
     }
 }

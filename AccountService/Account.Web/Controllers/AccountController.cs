@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Account.Business.Enums;
 using Account.Business.Exceptions;
 using Account.Business.Services.Interfaces;
 using Account.Dto.WebDtos;
@@ -60,6 +61,7 @@ namespace Account.Web.Controllers
             {
                 _accountValidation.Validate(createAccountDto);
 
+
                 //var response = await _accountService.CreateAccountAsync(createAccountDto, cancellationToken);
 
                 return new OkObjectResult("okas");
@@ -86,8 +88,7 @@ namespace Account.Web.Controllers
         {
             try
             {
-                //ValidateUser(dto.UserName);
-                //ValidatePassword(dto.Password);
+                _accountValidation.ValidateLogin(dto);
 
                 //var response = await _accountService.LoginAsync(dto, cancellationToken);
 
@@ -114,7 +115,11 @@ namespace Account.Web.Controllers
         public async Task<IEnumerable<WeatherForecast>> GetAsync()
         {
             //await VerifyUserAsync();
-
+            HttpContext.Items.TryGetValue("ApplicationOrigin", out object? test);
+            if (test != null)
+            {
+                Enum.TryParse(test as String, out ApplicationCode myStatus);
+            }
             var rng = new Random();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {

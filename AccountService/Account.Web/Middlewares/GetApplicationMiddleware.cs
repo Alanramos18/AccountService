@@ -2,18 +2,27 @@
 using Microsoft.Extensions.Primitives;
 using System.Threading.Tasks;
 using System;
+using Account.Business.Enums;
 
 namespace Account.Web.Middlewares
 {
     public class GetApplicationMiddleware
     {
         private readonly RequestDelegate _next;
-        public GetApplicationMiddleware(RequestDelegate next) { _next = next; }
+        public GetApplicationMiddleware(RequestDelegate next)
+        { 
+            _next = next;
+        }
 
         public async Task Invoke(HttpContext context)
         {
             context.Request.Headers.TryGetValue("Application", out StringValues appCode);
-            Console.WriteLine(appCode);
+
+            if (!String.IsNullOrEmpty(appCode))
+            {
+                context.Items.Add("ApplicationOrigin", appCode.ToString());
+            };
+
             await _next(context);
         }
     }
