@@ -23,5 +23,10 @@ namespace Account.Data.Entities
         ///     Application code the account is using.
         /// </summary>
         public string ApplicationCode { get; set; }
+
+        /// <summary>
+        ///     Verification of the account
+        /// </summary>
+        public int Verification { get; set; }
     }
 }

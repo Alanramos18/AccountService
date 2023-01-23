@@ -1,4 +1,5 @@
-﻿using Account.Business.Exceptions;
+﻿using System.Text.RegularExpressions;
+using Account.Business.Exceptions;
 using Account.Dto.WebDtos;
 using Account.Web.Validations.Interfaces;
 
@@ -7,30 +8,34 @@ namespace Account.Web.Validations
     public class AccountValidation : IAccountValidation
     {
         /// <inheritdoc/>
-        public void Validate(CreateAccountDto createAccountDto)
+        public void Validate(RegisterRequestDto createAccountDto)
         {
-            ValidateUserName(createAccountDto.UserName);
+            ValidateEmail(createAccountDto.Email);
             ValidatePassword(createAccountDto.Password);
-            ValidateApplication(createAccountDto.Application);
+            //ValidateApplication(createAccountDto.Application);
         }
 
         /// <inheritdoc/>
         public void ValidateLogin(LoginDto loginDto)
         {
-            ValidateUserName(loginDto.Email);
+            ValidateEmail(loginDto.Email);
             ValidatePassword(loginDto.Password);
             //ValidateApplication(createAccountDto.Application);
         }
 
         /// <summary>
-        ///     Validate the user name.
+        ///     Validate the email.
         /// </summary>
-        /// <param name="username">User Name</param>
-        private void ValidateUserName(string username)
+        /// <param name="email">Email</param>
+        public void ValidateEmail(string email)
         {
-            if (string.IsNullOrEmpty(username))
+            string regex = @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$";
+
+            var result = Regex.IsMatch(email, regex, RegexOptions.IgnoreCase);
+            
+            if (!result)
             {
-                throw new AccountException("El usuario no puede estar vacio");
+                throw new AccountException("The email is invalid");
             }
         }
 
@@ -42,7 +47,7 @@ namespace Account.Web.Validations
         {
             if (string.IsNullOrEmpty(password))
             {
-                throw new AccountException("La contraseña no puede estar vacia");
+                throw new AccountException("The password cannot be empty");
             }
         }
 

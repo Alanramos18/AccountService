@@ -29,7 +29,10 @@ namespace Account.Data.Entities.Mappings
                 .IsRequired();
 
             builder.Property(t => t.ApplicationCode)
-                .HasColumnName("APPLICATION_CODE")
+                .HasColumnName("APPLICATION_CODE");
+
+            builder.Property(t => t.Verification)
+                .HasColumnName("VERIFICATION")
                 .IsRequired();
         }
     }

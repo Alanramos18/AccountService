@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Primitives;
 using System.Threading.Tasks;
 using System;
-using Account.Business.Enums;
 
 namespace Account.Web.Middlewares
 {

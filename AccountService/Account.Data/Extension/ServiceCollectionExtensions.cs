@@ -19,7 +19,7 @@ namespace Account.Data.Extension
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
 
-            services.AddDbContext<AccountContext>(options => options.UseSqlServer(configuration.GetConnectionString("ChatConnection")));
+            services.AddDbContext<AccountContext>(options => options.UseSqlServer(configuration.GetConnectionString("AccountServiceConnection")));
             services.AddScoped<IAccountContext, AccountContext>();
         }
     }

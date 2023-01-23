@@ -1,6 +1,8 @@
-﻿namespace Account.Business.Helpers
+﻿using Account.Business.Helpers.Interfaces;
+
+namespace Account.Business.Helpers
 {
-    internal class Encryption : IEncryption
+    public class Encryption : IEncryption
     {
         public Encryption()
         {

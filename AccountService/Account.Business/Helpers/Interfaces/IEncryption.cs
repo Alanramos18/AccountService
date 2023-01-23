@@ -1,4 +1,4 @@
-﻿namespace Account.Business.Helpers
+﻿namespace Account.Business.Helpers.Interfaces
 {
     public interface IEncryption
     {

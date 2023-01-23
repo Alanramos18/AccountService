@@ -5,17 +5,14 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Account.Business.Enums;
 using Account.Business.Exceptions;
 using Account.Business.Services.Interfaces;
 using Account.Dto.WebDtos;
 using Account.Web.Validations.Interfaces;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 
 namespace Account.Web.Controllers
 {
@@ -24,15 +21,16 @@ namespace Account.Web.Controllers
     //[Authorize(Policy = "MustBelongToHR")]
     public class AccountController : ControllerBase
     {
-        //private readonly IAccountService _accountService;
+        private readonly IAccountService _accountService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
 
         public Credential Credential { get; set; }
+        public string AppSource { get; set; }
 
-        public AccountController(IAccountValidation accountValidation, ILogger<AccountController> logger)
+        public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
-            //_accountService = accountService;
+            _accountService = accountService;
             _accountValidation = accountValidation;
             _logger = logger;
             
@@ -52,19 +50,20 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpPost]
-        [Route("/create-user")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [Route("/register")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegisterResponsetDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<IActionResult> CreateAccountAsync(CreateAccountDto createAccountDto, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<RegisterResponsetDto>> RegisterAsync(RegisterRequestDto createAccountDto, CancellationToken cancellationToken = default)
         {
             try
             {
                 _accountValidation.Validate(createAccountDto);
 
+                GetAppSource();
 
-                //var response = await _accountService.CreateAccountAsync(createAccountDto, cancellationToken);
+                var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
 
-                return new OkObjectResult("okas");
+                return new OkObjectResult(response);
             }
             catch (AccountException ex)
             {
@@ -88,12 +87,12 @@ namespace Account.Web.Controllers
         {
             try
             {
-                _accountValidation.ValidateLogin(dto);
+                //_accountValidation.ValidateLogin(dto);
+                GetAppSource();
 
-                //var response = await _accountService.LoginAsync(dto, cancellationToken);
+                var response = await _accountService.LoginAsync(dto, AppSource, cancellationToken);
 
-                //return new OkObjectResult(response);
-                return new OkObjectResult("asd");
+                return new OkObjectResult(response);
             }
             catch (AccountException ex)
             {
@@ -101,25 +100,43 @@ namespace Account.Web.Controllers
             }
         }
 
-        private void ValidatePassword(string username)
+        /// <summary>
+        ///     Send recovery email code to reset password.
+        /// </summary>
+        /// <param name="email">User email</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>TBD</returns>
+        /// <response code="200">Ok.</response>
+        /// <response code="400">Bad Request.</response>
+        [HttpGet]
+        [Route("/forgot-password")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        public async Task<ActionResult<string>> ForgotPasswordAsync([FromQuery]string email, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-        }
+            try
+            {
+                _accountValidation.ValidateEmail(email);
+                GetAppSource();
 
-        private void ValidateUser(string username)
-        {
-            throw new NotImplementedException();
+                await _accountService.ForgotPasswordAsync(email, AppSource, cancellationToken);
+
+                return new OkResult();
+            }
+            catch (AccountException ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
         }
 
         [HttpGet]
         public async Task<IEnumerable<WeatherForecast>> GetAsync()
         {
             //await VerifyUserAsync();
-            HttpContext.Items.TryGetValue("ApplicationOrigin", out object? test);
-            if (test != null)
-            {
-                Enum.TryParse(test as String, out ApplicationCode myStatus);
-            }
+            GetAppSource();
+
+            var response = await _accountService.LoginAsync(new LoginDto(), AppSource, new CancellationToken());
+
             var rng = new Random();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
@@ -145,6 +162,13 @@ namespace Account.Web.Controllers
 
                 await HttpContext.SignInAsync("MyCookieAuth", claimsPrincipal);
             }
+        }
+
+        private void GetAppSource()
+        {
+            HttpContext.Items.TryGetValue("Application", out var code);
+            Enum.TryParse(code as String, out Business.Utils.Constants.ApplicationCode source);
+            AppSource = source.ToString();
         }
     }
 

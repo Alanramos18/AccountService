@@ -30,6 +30,15 @@ namespace Account.Data.Repositories.Interfaces
         Task<AccountEntity> GetByEmailAsync(string email, CancellationToken cancellationToken);
 
         /// <summary>
+        ///     Check whether an email in that source exists.
+        /// </summary>
+        /// <param name="email">Email</param>
+        /// <param name="source">Application Source</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns></returns>
+        Task<bool> CheckRegisteredEmailAsync(string email, string source, CancellationToken cancellationToken);
+
+        /// <summary>
         ///     Adds the specific entity.
         /// </summary>
         /// <param name="entity">Entity to be added</param>

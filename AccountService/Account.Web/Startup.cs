@@ -1,7 +1,11 @@
 using System;
+using Account.Business.Helpers;
+using Account.Business.Helpers.Interfaces;
 using Account.Business.Services;
+using Account.Data;
 using Account.Data.Extension;
 using Account.Data.Repositories;
+using Account.Dto.Shared;
 using Account.Web.Controllers;
 using Account.Web.Middlewares;
 using Account.Web.Validations;
@@ -29,7 +33,7 @@ namespace Account.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            //services.AddContextConfiguration();
+            services.AddContextConfiguration(Configuration);
 
             AddSwagger(services);
             ConfigureIoC(services);
@@ -52,9 +56,12 @@ namespace Account.Web
                 {
                     policy.WithOrigins("http://localhost:8100")
                         .AllowAnyHeader()
+                        .WithHeaders("Application")
                         .AllowAnyMethod();
                 });
             });
+
+            services.Configure<MailSettings>(Configuration.GetSection("EmailConfiguration"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -114,23 +121,26 @@ namespace Account.Web
 
         private static void ConfigureIoC(IServiceCollection services)
         {
+            services.AddScoped<IEncryption, Encryption>();
+            services.AddScoped<IEmailService, EmailService>();
+
             services.Scan(scan =>
                 scan.FromAssemblyOf<AccountValidation>()
                     .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Validation")))
                     .AsImplementedInterfaces()
                     .WithScopedLifetime());
 
-            //services.Scan(scan =>
-            //    scan.FromAssemblyOf<AccountService>()
-            //        .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
-            //        .AsImplementedInterfaces()
-            //        .WithScopedLifetime());
+            services.Scan(scan =>
+                scan.FromAssemblyOf<AccountService>()
+                    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime());
 
-            //services.Scan(scan =>
-            //    scan.FromAssemblyOf<AccountRepository>()
-            //        .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
-            //        .AsImplementedInterfaces()
-            //        .WithScopedLifetime());
+            services.Scan(scan =>
+                scan.FromAssemblyOf<AccountRepository>()
+                    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime());
         }
     }
 }

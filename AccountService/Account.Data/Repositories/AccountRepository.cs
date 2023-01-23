@@ -13,12 +13,10 @@ namespace Account.Data.Repositories
     public class AccountRepository : IAccountRepository
     {
         protected readonly IAccountContext _context;
-        internal DbSet<AccountEntity> _dbSet;
 
         public AccountRepository(IAccountContext accountServiceContext)
         {
             _context = accountServiceContext ?? throw new ArgumentNullException(nameof(accountServiceContext));
-            this._dbSet = (_context as DbContext)?.Set<AccountEntity>();
         }
 
         /// <inheritdoc />
@@ -33,9 +31,16 @@ namespace Account.Data.Repositories
             return await _context.Set<AccountEntity>().FindAsync(new object[] { entityId }, cancellationToken);
         }
 
+        /// <inheritdoc />
         public virtual async Task<AccountEntity> GetByEmailAsync(string email, CancellationToken cancellationToken)
         {
             return await Get().FirstOrDefaultAsync(x => x.Email.Equals(email), cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<bool> CheckRegisteredEmailAsync(string email, string source, CancellationToken cancellationToken)
+        {
+            return await Get().AnyAsync(x => x.Email.Equals(email) && x.ApplicationCode.Equals(source), cancellationToken);
         }
 
         /// <inheritdoc />

@@ -5,12 +5,12 @@ namespace Account.Business.Mappers.CreateAccount
 {
     public static class AccountExtension
     {
-        public static CreatedAccountDto Convert(this AccountEntity account)
+        public static RegisterResponsetDto Convert(this AccountEntity account)
         {
             if (account == null)
                 return null;
 
-            var dto = new CreatedAccountDto
+            var dto = new RegisterResponsetDto
             {
                 Id = account.Id,
                 Email = account.Email

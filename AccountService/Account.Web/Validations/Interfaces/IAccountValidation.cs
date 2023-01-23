@@ -8,12 +8,12 @@ namespace Account.Web.Validations.Interfaces
         ///     Validate properties of the account
         /// </summary>
         /// <param name="createAccountDto">Create account Dto</param>
-        void Validate(CreateAccountDto createAccountDto);
+        void Validate(RegisterRequestDto createAccountDto);
 
         /// <summary>
-        ///     Validates properties of the account on login
+        ///     Validates emails
         /// </summary>
-        /// <param name="loginDto">Login dto</param>
-        public void ValidateLogin(LoginDto loginDto);
+        /// <param name="email">Email</param>
+        public void ValidateEmail(string email);
     }
 }
