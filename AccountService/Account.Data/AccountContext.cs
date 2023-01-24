@@ -13,12 +13,14 @@ namespace Account.Data
 
         /// <inheritdoc />  
         public DbSet<AccountEntity> Accounts { get; set; }
+        public DbSet<AccountVerification> AccountsVerification { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             builder.ApplyConfiguration(new AccountMapping());
+            builder.ApplyConfiguration(new AccountVerificationMapping());
         }
     }
 }

@@ -8,6 +8,7 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
+using Org.BouncyCastle.Asn1.BC;
 
 namespace Account.Business.Helpers
 {
@@ -21,13 +22,13 @@ namespace Account.Business.Helpers
         }
 
         /// <inheritdoc/>
-        public async Task SendVerificationAsync(string to, CancellationToken cancellationToken, string from = null)
+        public async Task SendVerificationAsync(string to, string link, CancellationToken cancellationToken, string from = null)
         {
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse(from ?? _emailSettings.From));
             email.To.Add(MailboxAddress.Parse(to));
             email.Subject = Constants.VerificationSubject;
-            //email.Body = new TextPart(TextFormat.Html) { Text = html };
+            email.Body = new TextPart(TextFormat.Html) { Text = link };
 
             await SendEmailAsync(email, cancellationToken);
         }

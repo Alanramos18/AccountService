@@ -19,17 +19,22 @@ namespace Account.Business.Services
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
+        private readonly IAccountVerificationRepository _accountVerificationRepository;
         private readonly IEmailService _emailService;
         private readonly IEncryption _encryption;
         private readonly IConfiguration _configuration;
 
-        public AccountService(IAccountRepository accountRepository, IEmailService emailService, IEncryption encryption, IConfiguration configuration)
+        public AccountService(IAccountRepository accountRepository, IAccountVerificationRepository accountVerificationRepository,
+            IEmailService emailService, IEncryption encryption, IConfiguration configuration)
         {
             _accountRepository = accountRepository;
+            _accountVerificationRepository = accountVerificationRepository;
             _emailService = emailService;
             _encryption = encryption;
             _configuration = configuration;
         }
+
+        #region Register
 
         /// <inheritdoc />
         public async Task<RegisterResponsetDto> RegisterAsync(RegisterRequestDto accountDto, string source, CancellationToken cancellationToken)
@@ -46,10 +51,8 @@ namespace Account.Business.Services
                 account.Hash = _encryption.Hash(accountDto.Password);
 
                 await _accountRepository.AddAsync(account, cancellationToken);
-                
-                await _accountRepository.SaveChangesAsync(cancellationToken);
 
-                await _emailService.SendVerificationAsync(accountDto.Email, cancellationToken);
+                await _accountRepository.SaveChangesAsync(cancellationToken);
 
                 var response = account.Convert();
 
@@ -60,6 +63,10 @@ namespace Account.Business.Services
                 throw ex;
             }
         }
+
+        #endregion
+
+        #region Login
 
         /// <inheritdoc />
         public async Task<string> LoginAsync(LoginDto loginDto, string code, CancellationToken cancellationToken)
@@ -76,6 +83,10 @@ namespace Account.Business.Services
             return jwt;
         }
 
+        #endregion
+
+        #region Forgot Password
+
         /// <inheritdoc />
         public async Task ForgotPasswordAsync(string email, string source, CancellationToken cancellationToken)
         {
@@ -89,6 +100,15 @@ namespace Account.Business.Services
 
             await _emailService.SendResetCodeAsync(email, code, cancellationToken);
         }
+
+        public async Task VerifyResetCodeAsync(string code, CancellationToken cancellationToken)
+        {
+
+        }
+
+        #endregion
+
+
 
         private string CreateToken()
         {

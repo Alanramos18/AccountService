@@ -1,6 +1,6 @@
 ﻿namespace Account.Data.Entities
 {
-    public class AccountEntity
+    public class AccountVerification
     {
         /// <summary>
         ///     Id of the account.
@@ -13,18 +13,18 @@
         public string Email { get; set; }
 
         /// <summary>
-        ///     Hash of the account.
-        /// </summary>
-        public string Hash { get; set; }
-
-        /// <summary>
         ///     Application code the account is using.
         /// </summary>
         public string ApplicationCode { get; set; }
 
         /// <summary>
-        ///     Verification of the account
+        ///     Is reset code?.
         /// </summary>
-        public int Verification { get; set; }
+        public bool IsReset { get; set; }
+
+        /// <summary>
+        ///     Token or reset code.
+        /// </summary>
+        public string Token { get; set; }
     }
 }

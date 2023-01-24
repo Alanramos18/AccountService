@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Account.Data.Entities.Mappings
 {
-    internal class AccountMapping : IEntityTypeConfiguration<AccountEntity>
+    internal class AccountVerificationMapping : IEntityTypeConfiguration<AccountVerification>
     {
-        public void Configure(EntityTypeBuilder<AccountEntity> builder)
+        public void Configure(EntityTypeBuilder<AccountVerification> builder)
         {
             builder.ToTable("ACCOUNTS");
             builder.HasKey(t => t.Id);
@@ -19,15 +19,16 @@ namespace Account.Data.Entities.Mappings
                 .HasColumnName("EMAIL")
                 .IsRequired();
 
-            builder.Property(t => t.Hash)
-                .HasColumnName("HASH")
+            builder.Property(t => t.ApplicationCode)
+                .HasColumnName("APPLICATION_CODE")
                 .IsRequired();
 
-            builder.Property(t => t.ApplicationCode)
-                .HasColumnName("APPLICATION_CODE");
+            builder.Property(t => t.IsReset)
+                .HasColumnName("IS_REST")
+                .IsRequired();
 
-            builder.Property(t => t.Verification)
-                .HasColumnName("VERIFICATION")
+            builder.Property(t => t.Token)
+                .HasColumnName("TOKEN")
                 .IsRequired();
         }
     }

@@ -22,15 +22,17 @@ namespace Account.Web.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
+        private readonly IAccountVerificationService _accountVerificationService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
 
         public Credential Credential { get; set; }
         public string AppSource { get; set; }
 
-        public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
+        public AccountController(IAccountService accountService, IAccountVerificationService accountVerificationService, IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
             _accountService = accountService;
+            _accountVerificationService = accountVerificationService;
             _accountValidation = accountValidation;
             _logger = logger;
             
@@ -41,6 +43,8 @@ namespace Account.Web.Controllers
             };
         }
 
+        #region Register
+        
         /// <summary>
         ///     Create new accounts.
         /// </summary>
@@ -51,7 +55,7 @@ namespace Account.Web.Controllers
         /// <response code="400">Bad Request.</response>
         [HttpPost]
         [Route("/register")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegisterResponsetDto))]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponsetDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
         public async Task<ActionResult<RegisterResponsetDto>> RegisterAsync(RegisterRequestDto createAccountDto, CancellationToken cancellationToken = default)
         {
@@ -61,15 +65,53 @@ namespace Account.Web.Controllers
 
                 GetAppSource();
 
-                var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
+                //var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
 
-                return new OkObjectResult(response);
+                var confirmationLink = Url.Action("ConfirmEmailAsync", "Account", new { createAccountDto.Email, token = "asd" }, Request.Scheme);
+
+                //await _accountVerificationService.SendValidationLinkAsync(createAccountDto.Email, confirmationLink, AppSource, cancellationToken);
+
+                return new OkObjectResult("asd");
             }
             catch (AccountException ex)
             {
                 return new BadRequestObjectResult(ex.Message);
             }
         }
+
+        /// <summary>
+        ///     Confirm email validation.
+        /// </summary>
+        /// <param name="email">User Email</param>
+        /// <param name="token">Token</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>Created account dto</returns>
+        /// <response code="200">Ok.</response>
+        /// <response code="400">Bad Request.</response>
+        [HttpPost]
+        [Route("/confirm-email")]
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponsetDto))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        public async Task<ActionResult<RegisterResponsetDto>> ConfirmEmailAsync(string email, string token, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                GetAppSource();
+
+                //await _accountService.ConfirmEmailAsync(email, token, AppSource, cancellationToken);
+
+                // May be we should return a simple html at least.
+                return new OkObjectResult("Confirmed email");
+            }
+            catch (AccountException ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Login
 
         /// <summary>
         ///     Login users.
@@ -100,19 +142,23 @@ namespace Account.Web.Controllers
             }
         }
 
+        #endregion
+
+        #region Forgot Password
+
         /// <summary>
         ///     Send recovery email code to reset password.
         /// </summary>
         /// <param name="email">User email</param>
         /// <param name="cancellationToken">Cancellation Token</param>
-        /// <returns>TBD</returns>
+        /// <returns></returns>
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
-        [HttpGet]
+        [HttpPost]
         [Route("/forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<ActionResult<string>> ForgotPasswordAsync([FromQuery]string email, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ForgotPasswordAsync([FromQuery] string email, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -128,6 +174,43 @@ namespace Account.Web.Controllers
                 return new BadRequestObjectResult(ex.Message);
             }
         }
+
+        /// <summary>
+        ///     Verify the reset code.
+        /// </summary>
+        /// <param name="code">Reset password code</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>TBD</returns>
+        /// <response code="200">Ok.</response>
+        /// <response code="400">Bad Request.</response>
+        [HttpGet]
+        [Route("/verify-reset")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        public async Task<ActionResult<string>> VerifyResetCodeAsync([FromQuery] string code, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(code))
+                {
+                    return new BadRequestObjectResult("The code cannot be empty");
+                }
+                
+                GetAppSource();
+
+                //await _accountService.ForgotPasswordAsync(email, AppSource, cancellationToken);
+
+                return new OkResult();
+            }
+            catch (AccountException ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
+        #endregion
+
+
 
         [HttpGet]
         public async Task<IEnumerable<WeatherForecast>> GetAsync()
