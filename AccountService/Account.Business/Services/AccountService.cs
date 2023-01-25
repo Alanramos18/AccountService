@@ -9,8 +9,10 @@ using Account.Business.Exceptions;
 using Account.Business.Helpers.Interfaces;
 using Account.Business.Mappers.CreateAccount;
 using Account.Business.Services.Interfaces;
+using Account.Data.Entities;
 using Account.Data.Repositories.Interfaces;
 using Account.Dto.WebDtos;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -48,11 +50,12 @@ namespace Account.Business.Services
 
                 var account = accountDto.Convert(source);
 
-                account.Hash = _encryption.Hash(accountDto.Password);
+                var result = await _accountRepository.CreateUserAsync(account, accountDto.Password);
 
-                await _accountRepository.AddAsync(account, cancellationToken);
-
-                await _accountRepository.SaveChangesAsync(cancellationToken);
+                if (!result.Succeeded)
+                {
+                    throw new ApplicationException("Error creating user");
+                }
 
                 var response = account.Convert();
 
@@ -71,12 +74,12 @@ namespace Account.Business.Services
         /// <inheritdoc />
         public async Task<string> LoginAsync(LoginDto loginDto, string code, CancellationToken cancellationToken)
         {
-            var user = await _accountRepository.GetByEmailAsync(loginDto.Email, cancellationToken);
+            //var user = await _accountRepository.GetByEmailAsync(loginDto.Email, cancellationToken);
 
-            if (user == null || !_encryption.Verify(loginDto.Password, user.Hash))
-            {
-                throw new AccountException("The email or the password are incorrect");
-            }
+            //if (user == null || !_encryption.Verify(loginDto.Password, user.Hash))
+            //{
+            //    throw new AccountException("The email or the password are incorrect");
+            //}
 
             var jwt = CreateToken();
 

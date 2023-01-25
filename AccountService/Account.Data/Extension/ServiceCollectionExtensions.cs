@@ -1,7 +1,9 @@
 ﻿using System;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
 
 namespace Account.Data.Extension
 {
@@ -20,7 +22,7 @@ namespace Account.Data.Extension
                 throw new ArgumentNullException(nameof(configuration));
 
             services.AddDbContext<AccountContext>(options => options.UseSqlServer(configuration.GetConnectionString("AccountServiceConnection")));
-            services.AddScoped<IAccountContext, AccountContext>();
+            services.AddScoped<IAccountContext, AccountContext>();;
         }
     }
 }

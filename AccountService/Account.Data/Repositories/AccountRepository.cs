@@ -1,83 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Account.Data.Entities;
 using Account.Data.Repositories.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Account.Data.Repositories
 {
-    public class AccountRepository : IAccountRepository
+    public class AccountRepository : UserManager<AccountEntity>, IAccountRepository
     {
-        protected readonly IAccountContext _context;
+        private readonly UserStore<AccountEntity, IdentityRole, AccountContext, string, IdentityUserClaim<string>,
+        IdentityUserRole<string>, IdentityUserLogin<string>, IdentityUserToken<string>, IdentityRoleClaim<string>>
+        _store;
 
-        public AccountRepository(IAccountContext accountServiceContext)
+        public AccountRepository(IUserStore<AccountEntity> store,
+        IOptions<IdentityOptions> optionsAccessor,
+        IPasswordHasher<AccountEntity> passwordHasher,
+        IEnumerable<IUserValidator<AccountEntity>> userValidators,
+        IEnumerable<IPasswordValidator<AccountEntity>> passwordValidators,
+        ILookupNormalizer keyNormalizer,
+        IdentityErrorDescriber errors,
+        IServiceProvider services,
+        ILogger<UserManager<AccountEntity>> logger) : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
         {
-            _context = accountServiceContext ?? throw new ArgumentNullException(nameof(accountServiceContext));
+            _store = (UserStore<AccountEntity, IdentityRole, AccountContext, string, IdentityUserClaim<string>,
+            IdentityUserRole<string>, IdentityUserLogin<string>, IdentityUserToken<string>, IdentityRoleClaim<string>>)store;
         }
 
-        /// <inheritdoc />
-        public IQueryable<AccountEntity> Get()
+        public async Task<bool> CheckRegisteredEmailAsync(string email, string appSource, CancellationToken cancellationToken)
         {
-            return _context.Set<AccountEntity>();
+            cancellationToken.ThrowIfCancellationRequested();
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentNullException(nameof(email));
+
+            if (string.IsNullOrWhiteSpace(appSource))
+                throw new ArgumentNullException(nameof(appSource));
+
+            var emailExist = await _store.Context.Set<AccountEntity>().AnyAsync(x => x.Email.Equals(email) && x.ApplicationCode.Equals(appSource));
+
+            return emailExist;
         }
 
-        /// <inheritdoc />
-        public virtual async Task<AccountEntity> GetByIdAsync(int entityId, CancellationToken cancellationToken)
+        public Task<IdentityResult> CreateUserAsync(AccountEntity entity, string password)
         {
-            return await _context.Set<AccountEntity>().FindAsync(new object[] { entityId }, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public virtual async Task<AccountEntity> GetByEmailAsync(string email, CancellationToken cancellationToken)
-        {
-            return await Get().FirstOrDefaultAsync(x => x.Email.Equals(email), cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public virtual async Task<bool> CheckRegisteredEmailAsync(string email, string source, CancellationToken cancellationToken)
-        {
-            return await Get().AnyAsync(x => x.Email.Equals(email) && x.ApplicationCode.Equals(source), cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public virtual async Task AddAsync(AccountEntity entity, CancellationToken cancellationToken)
-        {
-            await _context.Set<AccountEntity>().AddAsync(entity, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public virtual async Task AddAsync(IEnumerable<AccountEntity> entities, CancellationToken cancellationToken)
-        {
-            await _context.Set<AccountEntity>().AddRangeAsync(entities, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public virtual void Delete(AccountEntity entity)
-        {
-            _context.Set<AccountEntity>().Remove(entity);
-        }
-
-        /// <inheritdoc />
-        public virtual void Delete(IEnumerable<AccountEntity> entities)
-        {
-            _context.Set<AccountEntity>().RemoveRange(entities);
-        }
-
-        /// <inheritdoc />
-        public async Task SaveChangesAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await (_context as DbContext).SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            return base.CreateAsync(entity, password);
         }
     }
 }

@@ -3,14 +3,17 @@ using Account.Business.Helpers;
 using Account.Business.Helpers.Interfaces;
 using Account.Business.Services;
 using Account.Data;
+using Account.Data.Entities;
 using Account.Data.Extension;
 using Account.Data.Repositories;
 using Account.Dto.Shared;
 using Account.Web.Controllers;
 using Account.Web.Middlewares;
 using Account.Web.Validations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,11 +41,17 @@ namespace Account.Web
             AddSwagger(services);
             ConfigureIoC(services);
 
-            //services.AddAuthentication("MyCookieAuth").AddCookie("MyCookieAuth", opt => {
-            //    opt.Cookie.Name = "MyCookieAuth";
-            //    opt.LoginPath = "/WeatherForecast";
-            //    opt.AccessDeniedPath = "/NO";
-            //});
+            services.AddIdentity<AccountEntity, IdentityRole>()
+                .AddEntityFrameworkStores<AccountContext>()
+                .AddUserManager<AccountRepository>()
+                .AddDefaultTokenProviders();
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            });
 
             //services.AddAuthorization(option => {
             //    option.AddPolicy("MustBelongToHR",

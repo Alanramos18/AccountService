@@ -65,13 +65,18 @@ namespace Account.Web.Controllers
 
                 GetAppSource();
 
-                //var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
+                var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
+
+                if (response == null)
+                {
+                    return NotFound();
+                }
 
                 var confirmationLink = Url.Action("ConfirmEmailAsync", "Account", new { createAccountDto.Email, token = "asd" }, Request.Scheme);
 
                 //await _accountVerificationService.SendValidationLinkAsync(createAccountDto.Email, confirmationLink, AppSource, cancellationToken);
 
-                return new OkObjectResult("asd");
+                return new OkObjectResult(response);
             }
             catch (AccountException ex)
             {
