@@ -15,6 +15,7 @@ using Account.Dto.WebDtos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 
 namespace Account.Business.Services
 {
@@ -39,7 +40,7 @@ namespace Account.Business.Services
         #region Register
 
         /// <inheritdoc />
-        public async Task<RegisterResponsetDto> RegisterAsync(RegisterRequestDto accountDto, string source, CancellationToken cancellationToken)
+        public async Task<AccountEntity> RegisterAsync(RegisterRequestDto accountDto, string source, CancellationToken cancellationToken)
         {
             try
             {
@@ -50,21 +51,50 @@ namespace Account.Business.Services
 
                 var account = accountDto.Convert(source);
 
-                var result = await _accountRepository.CreateUserAsync(account, accountDto.Password);
+                var result = await _accountRepository.CreateAsync(account, accountDto.Password);
 
                 if (!result.Succeeded)
                 {
                     throw new ApplicationException("Error creating user");
                 }
 
-                var response = account.Convert();
+                //var response = account.Convert();
 
-                return response;
+                return account;
             }
             catch (ApplicationException ex)
             {
                 throw ex;
             }
+        }
+
+        public async Task SendVerificationEmailAsync(AccountEntity account, string hostLink, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var token = await _accountRepository.GenerateEmailConfirmationTokenAsync(account);
+
+                var confirmationLink = string.Concat(hostLink, "&token=", token);
+
+                await _emailService.SendVerificationAsync(account.Email, confirmationLink, cancellationToken);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<IdentityResult> ConfirmEmailAsync(string email, string token, string appSource, CancellationToken cancellationToken)
+        {
+            var user = await _accountRepository.FindByEmailAsync(email, appSource, cancellationToken);
+
+            if (user == null)
+                throw new ApplicationException("That email is not register");
+
+            var result = await _accountRepository.ConfirmEmailAsync(user, token);
+
+            return result;
         }
 
         #endregion

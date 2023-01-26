@@ -45,14 +45,17 @@ namespace Account.Data.Repositories.Interfaces
         /// </summary>
         /// <param name="entity">Entity to be added</param>
         /// <param name="password">Cancellation Transaction Token</param>
-        Task<IdentityResult> CreateUserAsync(AccountEntity entity, string password);
+        Task<IdentityResult> CreateAsync(AccountEntity entity, string password);
 
-        ///// <summary>
-        /////     Adds the specifics entities.
-        ///// </summary>
-        ///// <param name="entities">Entities to be added.</param>
-        ///// <param name="cancellationToken">Cancellation Transaction Token</param>
-        //Task AddAsync(IEnumerable<AccountEntity> entities, CancellationToken cancellationToken);
+        /// <summary>
+        ///     Generate an email confirmation token.
+        /// </summary>
+        /// <param name="entity">Entity to confirm email.</param>
+        Task<string> GenerateEmailConfirmationTokenAsync(AccountEntity entity);
+
+        Task<IdentityResult> ConfirmEmailAsync(AccountEntity entity, string token);
+
+        Task<AccountEntity> FindByEmailAsync(string email, string appSource, CancellationToken cancellationToken);
 
         ///// <summary>
         /////     Deletes the specified entity.

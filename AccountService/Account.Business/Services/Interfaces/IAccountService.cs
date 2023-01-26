@@ -1,6 +1,8 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Account.Data.Entities;
 using Account.Dto.WebDtos;
+using Microsoft.AspNetCore.Identity;
 
 namespace Account.Business.Services.Interfaces
 {
@@ -13,7 +15,10 @@ namespace Account.Business.Services.Interfaces
         /// <param name="source">App source</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Created account dto</returns>
-        Task<RegisterResponsetDto> RegisterAsync(RegisterRequestDto accountDto, string source, CancellationToken cancellationToken);
+        Task<AccountEntity> RegisterAsync(RegisterRequestDto accountDto, string source, CancellationToken cancellationToken);
+
+        Task SendVerificationEmailAsync(AccountEntity account, string hostLink, CancellationToken cancellationToken);
+        Task<IdentityResult> ConfirmEmailAsync(string email, string token, string AppSource, CancellationToken cancellationToken);
 
         /// <summary>
         ///     Login user to get token.

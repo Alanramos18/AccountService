@@ -12,6 +12,7 @@ using Account.Web.Validations.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
 
 namespace Account.Web.Controllers
@@ -61,8 +62,6 @@ namespace Account.Web.Controllers
         {
             try
             {
-                _accountValidation.Validate(createAccountDto);
-
                 GetAppSource();
 
                 var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
@@ -72,9 +71,17 @@ namespace Account.Web.Controllers
                     return NotFound();
                 }
 
-                var confirmationLink = Url.Action("ConfirmEmailAsync", "Account", new { createAccountDto.Email, token = "asd" }, Request.Scheme);
+                // Not working for some reason
+                //var confirmationLink = Url.Action(nameof(ConfirmEmailAsync), "Account", null);
 
-                //await _accountVerificationService.SendValidationLinkAsync(createAccountDto.Email, confirmationLink, AppSource, cancellationToken);
+                //var confirmationLink = Url.RouteUrl(nameof(ConfirmEmailAsync), new { email = response.Email }, Request.Scheme);
+
+                //UrlHelper u = new UrlHelper(ControllerContext.HttpContext.);
+                //string confirmationLink = u.Action("About", "Home", null);
+
+                var confirmationLink = $"http://localhost:61768/confirm-email?email={response.Email}";
+
+                await _accountService.SendVerificationEmailAsync(response, confirmationLink, cancellationToken);
 
                 return new OkObjectResult(response);
             }
@@ -93,7 +100,7 @@ namespace Account.Web.Controllers
         /// <returns>Created account dto</returns>
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
-        [HttpPost]
+        [HttpGet]
         [Route("/confirm-email")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponsetDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
@@ -103,7 +110,12 @@ namespace Account.Web.Controllers
             {
                 GetAppSource();
 
-                //await _accountService.ConfirmEmailAsync(email, token, AppSource, cancellationToken);
+                var result = await _accountService.ConfirmEmailAsync(email, token, AppSource, cancellationToken);
+
+                if (result.Errors.Any())
+                {
+                    return NotFound();
+                }
 
                 // May be we should return a simple html at least.
                 return new OkObjectResult("Confirmed email");

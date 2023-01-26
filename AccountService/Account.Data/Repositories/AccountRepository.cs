@@ -48,9 +48,35 @@ namespace Account.Data.Repositories
             return emailExist;
         }
 
-        public Task<IdentityResult> CreateUserAsync(AccountEntity entity, string password)
+        public override Task<IdentityResult> CreateAsync(AccountEntity entity, string password)
         {
             return base.CreateAsync(entity, password);
+        }
+
+        public override Task<string> GenerateEmailConfirmationTokenAsync(AccountEntity entity)
+        {
+            return base.GenerateEmailConfirmationTokenAsync(entity);
+        }
+
+        public override Task<IdentityResult> ConfirmEmailAsync(AccountEntity entity, string token)
+        {
+            return base.ConfirmEmailAsync(entity, token);
+        }
+
+        public async Task<AccountEntity> FindByEmailAsync(string email, string appSource, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentNullException(nameof(email));
+
+            if (string.IsNullOrWhiteSpace(appSource))
+                throw new ArgumentNullException(nameof(appSource));
+
+            var user = await _store.Context.Set<AccountEntity>().FirstOrDefaultAsync(x => x.Email.Equals(email) && x.ApplicationCode.Equals(appSource));
+         
+            return user;
         }
     }
 }
