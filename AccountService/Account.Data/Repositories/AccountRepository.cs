@@ -48,21 +48,6 @@ namespace Account.Data.Repositories
             return emailExist;
         }
 
-        public override Task<IdentityResult> CreateAsync(AccountEntity entity, string password)
-        {
-            return base.CreateAsync(entity, password);
-        }
-
-        public override Task<string> GenerateEmailConfirmationTokenAsync(AccountEntity entity)
-        {
-            return base.GenerateEmailConfirmationTokenAsync(entity);
-        }
-
-        public override Task<IdentityResult> ConfirmEmailAsync(AccountEntity entity, string token)
-        {
-            return base.ConfirmEmailAsync(entity, token);
-        }
-
         public async Task<AccountEntity> FindByEmailAsync(string email, string appSource, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

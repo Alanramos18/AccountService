@@ -15,7 +15,7 @@ namespace Account.Data
 
         /// <inheritdoc />  
         public DbSet<AccountEntity> Accounts { get; set; }
-        //public DbSet<AccountVerification> AccountsVerification { get; set; }
+        public DbSet<ResetPasswordEntity> ResetPasswords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -23,7 +23,7 @@ namespace Account.Data
             SeedRoles(builder);
 
             builder.ApplyConfiguration(new AccountEntityMapping());
-            //builder.ApplyConfiguration(new AccountVerificationMapping());
+            builder.ApplyConfiguration(new ResetPasswordEntityMapping());
         }
 
         private static void SeedRoles(ModelBuilder builder)

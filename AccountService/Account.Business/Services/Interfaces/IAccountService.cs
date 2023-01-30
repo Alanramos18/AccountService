@@ -19,6 +19,8 @@ namespace Account.Business.Services.Interfaces
 
         Task SendVerificationEmailAsync(AccountEntity account, string hostLink, CancellationToken cancellationToken);
         Task<IdentityResult> ConfirmEmailAsync(string email, string token, string AppSource, CancellationToken cancellationToken);
+        Task<string> VerifyResetCodeAsync(string email, string appSource, string code, CancellationToken cancellationToken);
+        Task ChangePasswordAsync(string email, string appSource, string newPassword, string token, CancellationToken cancellationToken);
 
         /// <summary>
         ///     Login user to get token.

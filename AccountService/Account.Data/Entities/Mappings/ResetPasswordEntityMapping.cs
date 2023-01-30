@@ -3,32 +3,32 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Account.Data.Entities.Mappings
 {
-    internal class AccountVerificationMapping : IEntityTypeConfiguration<AccountVerification>
+    internal class ResetPasswordEntityMapping : IEntityTypeConfiguration<ResetPasswordEntity>
     {
-        public void Configure(EntityTypeBuilder<AccountVerification> builder)
+        public void Configure(EntityTypeBuilder<ResetPasswordEntity> builder)
         {
-            builder.ToTable("ACCOUNTS");
+            builder.ToTable("ResetPassword");
             builder.HasKey(t => t.Id);
 
             builder.Property(t => t.Id)
-                .HasColumnName("ID")
+                .HasColumnName("Id")
                 .IsRequired()
                 .ValueGeneratedOnAdd();
 
             builder.Property(t => t.Email)
-                .HasColumnName("EMAIL")
+                .HasColumnName("Email")
                 .IsRequired();
 
             builder.Property(t => t.ApplicationCode)
-                .HasColumnName("APPLICATION_CODE")
+                .HasColumnName("ApplicationCode")
                 .IsRequired();
 
-            builder.Property(t => t.IsReset)
-                .HasColumnName("IS_REST")
+            builder.Property(t => t.DigitCode)
+                .HasColumnName("DigitCode")
                 .IsRequired();
 
             builder.Property(t => t.Token)
-                .HasColumnName("TOKEN")
+                .HasColumnName("Token")
                 .IsRequired();
         }
     }

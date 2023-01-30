@@ -71,6 +71,7 @@ namespace Account.Web
             });
 
             services.Configure<MailSettings>(Configuration.GetSection("EmailConfiguration"));
+            services.Configure<JwtSettings>(Configuration.GetSection("JWT"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -130,7 +131,6 @@ namespace Account.Web
 
         private static void ConfigureIoC(IServiceCollection services)
         {
-            services.AddScoped<IEncryption, Encryption>();
             services.AddScoped<IEmailService, EmailService>();
 
             services.Scan(scan =>

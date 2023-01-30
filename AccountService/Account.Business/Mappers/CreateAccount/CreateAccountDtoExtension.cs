@@ -15,7 +15,7 @@ namespace Account.Business.Mappers.CreateAccount
             {
                 Email = dto.Email,
                 ApplicationCode = source,
-                UserName = "Test",
+                UserName = "Tesdfsdfst",
                 SecurityStamp = Guid.NewGuid().ToString()
             };
 

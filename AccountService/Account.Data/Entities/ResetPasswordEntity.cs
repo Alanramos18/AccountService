@@ -1,30 +1,30 @@
 ﻿namespace Account.Data.Entities
 {
-    public class AccountVerification
+    public class ResetPasswordEntity
     {
         /// <summary>
-        ///     Id of the account.
+        ///     Id of the entity.
         /// </summary>
         public int Id { get; set; }
 
         /// <summary>
-        ///     Email of the account.
+        ///     Email of the user.
         /// </summary>
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         /// <summary>
         ///     Application code the account is using.
         /// </summary>
-        public string ApplicationCode { get; set; }
+        public string? ApplicationCode { get; set; }
 
         /// <summary>
-        ///     Is reset code?.
+        ///     6 Digit reset code.
         /// </summary>
-        public bool IsReset { get; set; }
+        public string? DigitCode { get; set; }
 
         /// <summary>
-        ///     Token or reset code.
+        ///     Reset password token.
         /// </summary>
-        public string Token { get; set; }
+        public string? Token { get; set;}
     }
 }

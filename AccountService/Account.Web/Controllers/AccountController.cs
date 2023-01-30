@@ -23,17 +23,15 @@ namespace Account.Web.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
-        private readonly IAccountVerificationService _accountVerificationService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
 
         public Credential Credential { get; set; }
         public string AppSource { get; set; }
 
-        public AccountController(IAccountService accountService, IAccountVerificationService accountVerificationService, IAccountValidation accountValidation, ILogger<AccountController> logger)
+        public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
             _accountService = accountService;
-            _accountVerificationService = accountVerificationService;
             _accountValidation = accountValidation;
             _logger = logger;
             
@@ -141,12 +139,11 @@ namespace Account.Web.Controllers
         [HttpPost]
         [Route("/login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<ActionResult<string>> LoginAsync(LoginDto dto, CancellationToken cancellationToken = default)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<string>> LoginAsync([FromBody]LoginDto dto, CancellationToken cancellationToken = default)
         {
             try
             {
-                //_accountValidation.ValidateLogin(dto);
                 GetAppSource();
 
                 var response = await _accountService.LoginAsync(dto, AppSource, cancellationToken);
@@ -171,10 +168,10 @@ namespace Account.Web.Controllers
         /// <returns></returns>
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
-        [HttpPost]
+        [HttpGet]
         [Route("/forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPasswordAsync([FromQuery] string email, CancellationToken cancellationToken = default)
         {
             try
@@ -195,27 +192,68 @@ namespace Account.Web.Controllers
         /// <summary>
         ///     Verify the reset code.
         /// </summary>
+        /// <param name="email">User's email</param>
         /// <param name="code">Reset password code</param>
         /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>TBD</returns>
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
-        [HttpGet]
+        [HttpPost]
         [Route("/verify-reset")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<ActionResult<string>> VerifyResetCodeAsync([FromQuery] string code, CancellationToken cancellationToken = default)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<string>> VerifyResetCodeAsync([FromBody] VerifyResetRequest request, CancellationToken cancellationToken = default)
         {
             try
             {
-                if (string.IsNullOrEmpty(code))
+                if (string.IsNullOrEmpty(request.Code))
                 {
                     return new BadRequestObjectResult("The code cannot be empty");
                 }
                 
                 GetAppSource();
 
-                //await _accountService.ForgotPasswordAsync(email, AppSource, cancellationToken);
+                var result = await _accountService.VerifyResetCodeAsync(request.Email, AppSource, request.Code, cancellationToken);
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    return new BadRequestResult();
+                }
+
+                return new OkObjectResult(result);
+            }
+            catch (AccountException ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Changes account password.
+        /// </summary>
+        /// <param name="email">User's email</param>
+        /// <param name="newPassword">New password to change</param>
+        /// <param name="token">Reset password token</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>TBD</returns>
+        /// <response code="200">Ok.</response>
+        /// <response code="400">Bad Request.</response>
+        [HttpPost]
+        [Route("/change-password")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<string>> ChangePasswordAsync([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Token))
+                {
+                    return new BadRequestObjectResult("The code cannot be empty");
+                }
+
+                GetAppSource();
+
+                await _accountService.ChangePasswordAsync(request.Email, AppSource, request.NewPassword, request.Token, cancellationToken);
 
                 return new OkResult();
             }
@@ -226,25 +264,6 @@ namespace Account.Web.Controllers
         }
 
         #endregion
-
-
-
-        [HttpGet]
-        public async Task<IEnumerable<WeatherForecast>> GetAsync()
-        {
-            //await VerifyUserAsync();
-            GetAppSource();
-
-            var response = await _accountService.LoginAsync(new LoginDto(), AppSource, new CancellationToken());
-
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55)
-            })
-            .ToArray();
-        }
 
         private async Task VerifyUserAsync()
         {
