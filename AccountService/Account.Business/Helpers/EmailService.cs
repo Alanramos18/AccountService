@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Account.Business.Helpers.Interfaces;
 using Account.Business.Utils;
@@ -8,7 +9,6 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
-using Org.BouncyCastle.Asn1.BC;
 
 namespace Account.Business.Helpers
 {
@@ -25,10 +25,17 @@ namespace Account.Business.Helpers
         public async Task SendVerificationAsync(string to, string link, CancellationToken cancellationToken, string from = null)
         {
             var email = new MimeMessage();
+            var bodyBuilder = new BodyBuilder();
+
+            using (StreamReader SourceReader = System.IO.File.OpenText(@"H:\Akroma\AccountService\AccountService\Account.Business\Assets\Html\verify-email.html"))
+            {
+                bodyBuilder.HtmlBody = SourceReader.ReadToEnd();
+            }
+
             email.From.Add(MailboxAddress.Parse(from ?? _emailSettings.From));
             email.To.Add(MailboxAddress.Parse(to));
             email.Subject = Constants.VerificationSubject;
-            email.Body = new TextPart(TextFormat.Html) { Text = link };
+            email.Body = bodyBuilder.ToMessageBody();
 
             await SendEmailAsync(email, cancellationToken);
         }

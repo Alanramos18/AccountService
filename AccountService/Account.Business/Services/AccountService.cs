@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Account.Business.Exceptions;
 using Account.Business.Helpers.Interfaces;
 using Account.Business.Mappers.CreateAccount;
@@ -13,8 +14,10 @@ using Account.Data.Entities;
 using Account.Data.Repositories.Interfaces;
 using Account.Dto.Shared;
 using Account.Dto.WebDtos;
+using Azure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
@@ -27,27 +30,29 @@ namespace Account.Business.Services
         private readonly IResetPasswordRepository _resetPasswordRepository;
         private readonly IEmailService _emailService;
         private readonly JwtSettings _jwtSettings;
+        private readonly ILogger<AccountService> _logger;
 
         public AccountService(IAccountRepository accountRepository, IResetPasswordRepository resetPasswordRepository,
-            IEmailService emailService, IOptions<JwtSettings> jwtSettings)
+            IEmailService emailService, IOptions<JwtSettings> jwtSettings, ILogger<AccountService> logger)
         {
             _accountRepository = accountRepository;
             _resetPasswordRepository = resetPasswordRepository;
             _emailService = emailService;
             _jwtSettings = jwtSettings.Value;
+            _logger = logger;
         }
 
         #region Register
 
         /// <inheritdoc />
-        public async Task<AccountEntity> RegisterAsync(RegisterRequestDto accountDto, string source, CancellationToken cancellationToken)
+        public async Task<RegisterResponsetDto> RegisterAsync(RegisterRequestDto accountDto, string confirmationLink, string source, CancellationToken cancellationToken)
         {
             try
             {
                 var email = await _accountRepository.CheckRegisteredEmailAsync(accountDto.Email, source, cancellationToken);
 
                 if (email)
-                    throw new ApplicationException("That email is already registered");
+                    return null;
 
                 var account = accountDto.Convert(source);
 
@@ -58,9 +63,11 @@ namespace Account.Business.Services
                     throw new ApplicationException("Error creating user");
                 }
 
-                //var response = account.Convert();
+                await SendVerificationEmailAsync(account, confirmationLink, cancellationToken);
 
-                return account;
+                var response = account.Convert();
+
+                return response;
             }
             catch (ApplicationException ex)
             {
@@ -68,13 +75,20 @@ namespace Account.Business.Services
             }
         }
 
-        public async Task SendVerificationEmailAsync(AccountEntity account, string hostLink, CancellationToken cancellationToken)
+        /// <summary>
+        ///     Send Verification email.
+        /// </summary>
+        /// <param name="account">Account to create token for</param>
+        /// <param name="confirmationLink">Link to send in the html</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns></returns>
+        private async Task SendVerificationEmailAsync(AccountEntity account, string confirmationLink, CancellationToken cancellationToken)
         {
             try
             {
                 var token = await _accountRepository.GenerateEmailConfirmationTokenAsync(account);
 
-                var confirmationLink = string.Concat(hostLink, "&token=", token);
+                confirmationLink = string.Concat(confirmationLink, "?email=", account.Email, "&token=", HttpUtility.UrlEncode(token));
 
                 await _emailService.SendVerificationAsync(account.Email, confirmationLink, cancellationToken);
             }
@@ -85,12 +99,13 @@ namespace Account.Business.Services
             }
         }
 
+        /// <inheritdoc />
         public async Task<IdentityResult> ConfirmEmailAsync(string email, string token, string appSource, CancellationToken cancellationToken)
         {
             var user = await _accountRepository.FindByEmailAsync(email, appSource, cancellationToken);
 
             if (user == null)
-                throw new ApplicationException("That email is not register");
+                return null;
 
             var result = await _accountRepository.ConfirmEmailAsync(user, token);
 
@@ -108,11 +123,13 @@ namespace Account.Business.Services
 
             if (user == null || !await _accountRepository.CheckPasswordAsync(user, loginDto.Password))
             {
+                _logger.LogInformation($"The email: { loginDto.Email } has try to log in with password: { loginDto.Password }");
                 throw new ApplicationException("Email or password is invalid");
             }
 
             if (user.EmailConfirmed == false) { throw new ApplicationException("Please validate your account to log in"); }
 
+            // We need to update claims in the future.
             var authClaims = new List<Claim>()
             {
                 new Claim(ClaimTypes.Email, user.Email),
@@ -184,7 +201,7 @@ namespace Account.Business.Services
                 if (user == null)
                     return;
 
-                await _accountRepository.ResetPasswordAsync(user, token, newPassword);
+                var result = await _accountRepository.ResetPasswordAsync(user, token, newPassword);
             }
             catch (Exception ex)
             {

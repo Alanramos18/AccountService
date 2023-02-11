@@ -18,16 +18,12 @@ using Microsoft.Extensions.Logging;
 namespace Account.Web.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    //[Authorize(Policy = "MustBelongToHR")]
+    [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
-
-        public Credential Credential { get; set; }
-        public string AppSource { get; set; }
 
         public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
@@ -53,35 +49,23 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpPost]
-        [Route("/register")]
+        [Route("register")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponsetDto))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<RegisterResponsetDto>> RegisterAsync(RegisterRequestDto createAccountDto, CancellationToken cancellationToken = default)
         {
             try
             {
-                GetAppSource();
+                var confirmationLink = Url.Action("ConfirmEmail", "Account", null, Request.Scheme);
 
-                var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
+                var response = await _accountService.RegisterAsync(createAccountDto, confirmationLink, GetAppSource(), cancellationToken);
 
                 if (response == null)
                 {
-                    return NotFound();
+                    return new BadRequestObjectResult("That email is already registered.");
                 }
 
-                // Not working for some reason
-                //var confirmationLink = Url.Action(nameof(ConfirmEmailAsync), "Account", null);
-
-                //var confirmationLink = Url.RouteUrl(nameof(ConfirmEmailAsync), new { email = response.Email }, Request.Scheme);
-
-                //UrlHelper u = new UrlHelper(ControllerContext.HttpContext.);
-                //string confirmationLink = u.Action("About", "Home", null);
-
-                var confirmationLink = $"http://localhost:61768/confirm-email?email={response.Email}";
-
-                await _accountService.SendVerificationEmailAsync(response, confirmationLink, cancellationToken);
-
-                return new OkObjectResult(response);
+                return new CreatedAtRouteResult("RegisterAsync", response);
             }
             catch (AccountException ex)
             {
@@ -99,20 +83,20 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpGet]
-        [Route("/confirm-email")]
+        [Route("confirm-email")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponsetDto))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<RegisterResponsetDto>> ConfirmEmailAsync(string email, string token, CancellationToken cancellationToken = default)
         {
             try
             {
-                GetAppSource();
+                var result = await _accountService.ConfirmEmailAsync(email, token, GetAppSource(), cancellationToken);
 
-                var result = await _accountService.ConfirmEmailAsync(email, token, AppSource, cancellationToken);
-
-                if (result.Errors.Any())
+                if (result == null || result.Errors.Any())
                 {
-                    return NotFound();
+                    // We should not return nothing else than ok due to security.
+                    // We should log something tho.
+                    _logger.LogInformation($"The email: {email} try confirm itself.");
                 }
 
                 // May be we should return a simple html at least.
@@ -137,16 +121,14 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpPost]
-        [Route("/login")]
+        [Route("login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<string>> LoginAsync([FromBody]LoginDto dto, CancellationToken cancellationToken = default)
         {
             try
             {
-                GetAppSource();
-
-                var response = await _accountService.LoginAsync(dto, AppSource, cancellationToken);
+                var response = await _accountService.LoginAsync(dto, GetAppSource(), cancellationToken);
 
                 return new OkObjectResult(response);
             }
@@ -169,7 +151,7 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpGet]
-        [Route("/forgot-password")]
+        [Route("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPasswordAsync([FromQuery] string email, CancellationToken cancellationToken = default)
@@ -177,9 +159,8 @@ namespace Account.Web.Controllers
             try
             {
                 _accountValidation.ValidateEmail(email);
-                GetAppSource();
 
-                await _accountService.ForgotPasswordAsync(email, AppSource, cancellationToken);
+                await _accountService.ForgotPasswordAsync(email, GetAppSource(), cancellationToken);
 
                 return new OkResult();
             }
@@ -199,7 +180,7 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpPost]
-        [Route("/verify-reset")]
+        [Route("verify-reset")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<string>> VerifyResetCodeAsync([FromBody] VerifyResetRequest request, CancellationToken cancellationToken = default)
@@ -210,10 +191,8 @@ namespace Account.Web.Controllers
                 {
                     return new BadRequestObjectResult("The code cannot be empty");
                 }
-                
-                GetAppSource();
 
-                var result = await _accountService.VerifyResetCodeAsync(request.Email, AppSource, request.Code, cancellationToken);
+                var result = await _accountService.VerifyResetCodeAsync(request.Email, GetAppSource(), request.Code, cancellationToken);
 
                 if (string.IsNullOrEmpty(result))
                 {
@@ -239,7 +218,7 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpPost]
-        [Route("/change-password")]
+        [Route("change-password")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<string>> ChangePasswordAsync([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken = default)
@@ -251,9 +230,7 @@ namespace Account.Web.Controllers
                     return new BadRequestObjectResult("The code cannot be empty");
                 }
 
-                GetAppSource();
-
-                await _accountService.ChangePasswordAsync(request.Email, AppSource, request.NewPassword, request.Token, cancellationToken);
+                await _accountService.ChangePasswordAsync(request.Email, GetAppSource(), request.NewPassword, request.Token, cancellationToken);
 
                 return new OkResult();
             }
@@ -283,21 +260,12 @@ namespace Account.Web.Controllers
             }
         }
 
-        private void GetAppSource()
+        private string GetAppSource()
         {
             HttpContext.Items.TryGetValue("Application", out var code);
             Enum.TryParse(code as String, out Business.Utils.Constants.ApplicationCode source);
-            AppSource = source.ToString();
-        }
-    }
 
-    public class Credential
-    {
-        [Required]
-        public string UserName { get; set; }
-        
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
+            return source.ToString();
+        }
     }
 }

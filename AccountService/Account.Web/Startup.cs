@@ -46,6 +46,10 @@ namespace Account.Web
                 .AddUserManager<AccountRepository>()
                 .AddDefaultTokenProviders();
 
+            services.Configure<IdentityOptions>(x => {
+                x.Password.RequireNonAlphanumeric = false;
+            });
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
