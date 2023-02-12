@@ -30,12 +30,6 @@ namespace Account.Web.Controllers
             _accountService = accountService;
             _accountValidation = accountValidation;
             _logger = logger;
-            
-            Credential = new Credential
-            {
-                UserName = "alanramos",
-                Password = "1234"
-            };
         }
 
         #region Register
@@ -154,12 +148,10 @@ namespace Account.Web.Controllers
         [Route("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ForgotPasswordAsync([FromQuery] string email, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ForgotPasswordAsync([FromQuery, EmailAddress] string email, CancellationToken cancellationToken = default)
         {
             try
             {
-                _accountValidation.ValidateEmail(email);
-
                 await _accountService.ForgotPasswordAsync(email, GetAppSource(), cancellationToken);
 
                 return new OkResult();
@@ -173,8 +165,7 @@ namespace Account.Web.Controllers
         /// <summary>
         ///     Verify the reset code.
         /// </summary>
-        /// <param name="email">User's email</param>
-        /// <param name="code">Reset password code</param>
+        /// <param name="request">Request class</param>
         /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>TBD</returns>
         /// <response code="200">Ok.</response>
@@ -210,9 +201,7 @@ namespace Account.Web.Controllers
         /// <summary>
         ///     Changes account password.
         /// </summary>
-        /// <param name="email">User's email</param>
-        /// <param name="newPassword">New password to change</param>
-        /// <param name="token">Reset password token</param>
+        /// <param name="request">Request DTO</param>
         /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>TBD</returns>
         /// <response code="200">Ok.</response>
@@ -227,10 +216,17 @@ namespace Account.Web.Controllers
             {
                 if (string.IsNullOrEmpty(request.Token))
                 {
-                    return new BadRequestObjectResult("The code cannot be empty");
+                    return new BadRequestObjectResult("The token cannot be empty");
                 }
 
-                await _accountService.ChangePasswordAsync(request.Email, GetAppSource(), request.NewPassword, request.Token, cancellationToken);
+                var response = await _accountService.ChangePasswordAsync(request.Email, GetAppSource(), request.NewPassword, request.Token, cancellationToken);
+
+                if (response == null || response.Errors.Any())
+                {
+                    // TODO
+                    _logger.LogInformation("");
+                    return new BadRequestResult();
+                }
 
                 return new OkResult();
             }
@@ -242,23 +238,23 @@ namespace Account.Web.Controllers
 
         #endregion
 
-        private async Task VerifyUserAsync()
-        {
-            if (Credential.UserName == "alanramos" && Credential.Password == "1234")
-            {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, "alan"),
-                    new Claim(ClaimTypes.Email, "alanramos@hotmail.com"),
-                    new Claim("Department", "HR")
-                };
+        //private async Task VerifyUserAsync()
+        //{
+        //    if (Credential.UserName == "alanramos" && Credential.Password == "1234")
+        //    {
+        //        var claims = new List<Claim>
+        //        {
+        //            new Claim(ClaimTypes.Name, "alan"),
+        //            new Claim(ClaimTypes.Email, "alanramos@hotmail.com"),
+        //            new Claim("Department", "HR")
+        //        };
 
-                var identity = new ClaimsIdentity(claims, "MyCookieAuth");
-                ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
+        //        var identity = new ClaimsIdentity(claims, "MyCookieAuth");
+        //        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
 
-                await HttpContext.SignInAsync("MyCookieAuth", claimsPrincipal);
-            }
-        }
+        //        await HttpContext.SignInAsync("MyCookieAuth", claimsPrincipal);
+        //    }
+        //}
 
         private string GetAppSource()
         {

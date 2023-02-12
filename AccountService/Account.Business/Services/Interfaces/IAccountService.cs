@@ -46,6 +46,6 @@ namespace Account.Business.Services.Interfaces
         Task ForgotPasswordAsync(string email, string applicationCode, CancellationToken cancellationToken);
 
         Task<string> VerifyResetCodeAsync(string email, string appSource, string code, CancellationToken cancellationToken);
-        Task ChangePasswordAsync(string email, string appSource, string newPassword, string token, CancellationToken cancellationToken);
+        Task<IdentityResult> ChangePasswordAsync(string email, string appSource, string newPassword, string token, CancellationToken cancellationToken);
     }
 }

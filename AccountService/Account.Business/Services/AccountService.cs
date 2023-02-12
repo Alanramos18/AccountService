@@ -192,16 +192,18 @@ namespace Account.Business.Services
             return entity.Token;
         }
 
-        public async Task ChangePasswordAsync(string email, string appSource, string newPassword, string token, CancellationToken cancellationToken)
+        public async Task<IdentityResult> ChangePasswordAsync(string email, string appSource, string newPassword, string token, CancellationToken cancellationToken)
         {
             try
             {
                 var user = await _accountRepository.FindByEmailAsync(email, appSource, cancellationToken);
 
                 if (user == null)
-                    return;
+                    return null;
 
                 var result = await _accountRepository.ResetPasswordAsync(user, token, newPassword);
+
+                return result;
             }
             catch (Exception ex)
             {
