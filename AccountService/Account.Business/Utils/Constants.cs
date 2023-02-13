@@ -5,12 +5,6 @@
         public static readonly string ResetPasswordSubject = "Reseteo de contraseña";
         public static readonly string VerificationSubject = "Por favor, verifica tu cuenta";
 
-        public enum AccountVerified
-        {
-            NotVerified,
-            Verified
-        }
-
         public enum ApplicationCode
         {
             UnlamApplication

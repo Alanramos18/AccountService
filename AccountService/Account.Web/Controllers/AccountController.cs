@@ -12,35 +12,24 @@ using Account.Web.Validations.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
 
 namespace Account.Web.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    //[Authorize(Policy = "MustBelongToHR")]
+    [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
-        private readonly IAccountVerificationService _accountVerificationService;
         private readonly IAccountValidation _accountValidation;
         private readonly ILogger<AccountController> _logger;
 
-        public Credential Credential { get; set; }
-        public string AppSource { get; set; }
-
-        public AccountController(IAccountService accountService, IAccountVerificationService accountVerificationService, IAccountValidation accountValidation, ILogger<AccountController> logger)
+        public AccountController(IAccountService accountService, IAccountValidation accountValidation, ILogger<AccountController> logger)
         {
             _accountService = accountService;
-            _accountVerificationService = accountVerificationService;
             _accountValidation = accountValidation;
             _logger = logger;
-            
-            Credential = new Credential
-            {
-                UserName = "alanramos",
-                Password = "1234"
-            };
         }
 
         #region Register
@@ -54,24 +43,23 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpPost]
-        [Route("/register")]
+        [Route("register")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponsetDto))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<RegisterResponsetDto>> RegisterAsync(RegisterRequestDto createAccountDto, CancellationToken cancellationToken = default)
         {
             try
             {
-                _accountValidation.Validate(createAccountDto);
+                var confirmationLink = Url.Action("ConfirmEmail", "Account", null, Request.Scheme);
 
-                GetAppSource();
+                var response = await _accountService.RegisterAsync(createAccountDto, confirmationLink, GetAppSource(), cancellationToken);
 
-                //var response = await _accountService.RegisterAsync(createAccountDto, AppSource, cancellationToken);
+                if (response == null)
+                {
+                    return new BadRequestObjectResult("That email is already registered.");
+                }
 
-                var confirmationLink = Url.Action("ConfirmEmailAsync", "Account", new { createAccountDto.Email, token = "asd" }, Request.Scheme);
-
-                //await _accountVerificationService.SendValidationLinkAsync(createAccountDto.Email, confirmationLink, AppSource, cancellationToken);
-
-                return new OkObjectResult("asd");
+                return new CreatedAtRouteResult("RegisterAsync", response);
             }
             catch (AccountException ex)
             {
@@ -88,17 +76,22 @@ namespace Account.Web.Controllers
         /// <returns>Created account dto</returns>
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
-        [HttpPost]
-        [Route("/confirm-email")]
+        [HttpGet]
+        [Route("confirm-email")]
         [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponsetDto))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<RegisterResponsetDto>> ConfirmEmailAsync(string email, string token, CancellationToken cancellationToken = default)
         {
             try
             {
-                GetAppSource();
+                var result = await _accountService.ConfirmEmailAsync(email, token, GetAppSource(), cancellationToken);
 
-                //await _accountService.ConfirmEmailAsync(email, token, AppSource, cancellationToken);
+                if (result == null || result.Errors.Any())
+                {
+                    // We should not return nothing else than ok due to security.
+                    // We should log something tho.
+                    _logger.LogInformation($"The email: {email} try confirm itself.");
+                }
 
                 // May be we should return a simple html at least.
                 return new OkObjectResult("Confirmed email");
@@ -122,17 +115,14 @@ namespace Account.Web.Controllers
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
         [HttpPost]
-        [Route("/login")]
+        [Route("login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<ActionResult<string>> LoginAsync(LoginDto dto, CancellationToken cancellationToken = default)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<string>> LoginAsync([FromBody]LoginDto dto, CancellationToken cancellationToken = default)
         {
             try
             {
-                //_accountValidation.ValidateLogin(dto);
-                GetAppSource();
-
-                var response = await _accountService.LoginAsync(dto, AppSource, cancellationToken);
+                var response = await _accountService.LoginAsync(dto, GetAppSource(), cancellationToken);
 
                 return new OkObjectResult(response);
             }
@@ -154,18 +144,15 @@ namespace Account.Web.Controllers
         /// <returns></returns>
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
-        [HttpPost]
-        [Route("/forgot-password")]
+        [HttpGet]
+        [Route("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<IActionResult> ForgotPasswordAsync([FromQuery] string email, CancellationToken cancellationToken = default)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ForgotPasswordAsync([FromQuery, EmailAddress] string email, CancellationToken cancellationToken = default)
         {
             try
             {
-                _accountValidation.ValidateEmail(email);
-                GetAppSource();
-
-                await _accountService.ForgotPasswordAsync(email, AppSource, cancellationToken);
+                await _accountService.ForgotPasswordAsync(email, GetAppSource(), cancellationToken);
 
                 return new OkResult();
             }
@@ -178,27 +165,68 @@ namespace Account.Web.Controllers
         /// <summary>
         ///     Verify the reset code.
         /// </summary>
-        /// <param name="code">Reset password code</param>
+        /// <param name="request">Request class</param>
         /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>TBD</returns>
         /// <response code="200">Ok.</response>
         /// <response code="400">Bad Request.</response>
-        [HttpGet]
-        [Route("/verify-reset")]
+        [HttpPost]
+        [Route("verify-reset")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = null)]
-        public async Task<ActionResult<string>> VerifyResetCodeAsync([FromQuery] string code, CancellationToken cancellationToken = default)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<string>> VerifyResetCodeAsync([FromBody] VerifyResetRequest request, CancellationToken cancellationToken = default)
         {
             try
             {
-                if (string.IsNullOrEmpty(code))
+                if (string.IsNullOrEmpty(request.Code))
                 {
                     return new BadRequestObjectResult("The code cannot be empty");
                 }
-                
-                GetAppSource();
 
-                //await _accountService.ForgotPasswordAsync(email, AppSource, cancellationToken);
+                var result = await _accountService.VerifyResetCodeAsync(request.Email, GetAppSource(), request.Code, cancellationToken);
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    return new BadRequestResult();
+                }
+
+                return new OkObjectResult(result);
+            }
+            catch (AccountException ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
+        /// <summary>
+        ///     Changes account password.
+        /// </summary>
+        /// <param name="request">Request DTO</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>TBD</returns>
+        /// <response code="200">Ok.</response>
+        /// <response code="400">Bad Request.</response>
+        [HttpPost]
+        [Route("change-password")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<string>> ChangePasswordAsync([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Token))
+                {
+                    return new BadRequestObjectResult("The token cannot be empty");
+                }
+
+                var response = await _accountService.ChangePasswordAsync(request.Email, GetAppSource(), request.NewPassword, request.Token, cancellationToken);
+
+                if (response == null || response.Errors.Any())
+                {
+                    // TODO
+                    _logger.LogInformation("");
+                    return new BadRequestResult();
+                }
 
                 return new OkResult();
             }
@@ -210,58 +238,30 @@ namespace Account.Web.Controllers
 
         #endregion
 
+        //private async Task VerifyUserAsync()
+        //{
+        //    if (Credential.UserName == "alanramos" && Credential.Password == "1234")
+        //    {
+        //        var claims = new List<Claim>
+        //        {
+        //            new Claim(ClaimTypes.Name, "alan"),
+        //            new Claim(ClaimTypes.Email, "alanramos@hotmail.com"),
+        //            new Claim("Department", "HR")
+        //        };
 
+        //        var identity = new ClaimsIdentity(claims, "MyCookieAuth");
+        //        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
 
-        [HttpGet]
-        public async Task<IEnumerable<WeatherForecast>> GetAsync()
-        {
-            //await VerifyUserAsync();
-            GetAppSource();
+        //        await HttpContext.SignInAsync("MyCookieAuth", claimsPrincipal);
+        //    }
+        //}
 
-            var response = await _accountService.LoginAsync(new LoginDto(), AppSource, new CancellationToken());
-
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55)
-            })
-            .ToArray();
-        }
-
-        private async Task VerifyUserAsync()
-        {
-            if (Credential.UserName == "alanramos" && Credential.Password == "1234")
-            {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, "alan"),
-                    new Claim(ClaimTypes.Email, "alanramos@hotmail.com"),
-                    new Claim("Department", "HR")
-                };
-
-                var identity = new ClaimsIdentity(claims, "MyCookieAuth");
-                ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
-
-                await HttpContext.SignInAsync("MyCookieAuth", claimsPrincipal);
-            }
-        }
-
-        private void GetAppSource()
+        private string GetAppSource()
         {
             HttpContext.Items.TryGetValue("Application", out var code);
             Enum.TryParse(code as String, out Business.Utils.Constants.ApplicationCode source);
-            AppSource = source.ToString();
-        }
-    }
 
-    public class Credential
-    {
-        [Required]
-        public string UserName { get; set; }
-        
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
+            return source.ToString();
+        }
     }
 }

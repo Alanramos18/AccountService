@@ -2,7 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Account.Business.Services.Interfaces;
+using Account.Dto.WebDtos;
 using Account.Web.Controllers;
+using Account.Web.Validations.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
 
 namespace Account.Web.Test.Controllers
@@ -10,37 +17,71 @@ namespace Account.Web.Test.Controllers
     [TestFixture]
     public class PromocionesControllerTest
     {
-        private AccountController _accountController;
-        private IPromocionesServices _promocionesServices;
+        private Mock<IAccountService> _accountService;
+        private Mock<IAccountValidation> _accountValidation;
+        private Mock<ILogger<AccountController>> _logger;
         private CancellationToken _cancellationToken;
+
+        private RegisterRequestDto _validRequest;
+
+        private AccountController _accountController;
 
         [OneTimeSetUp]
         public void SetUp()
         {
-            _promocionesServices = Mock.Create<IPromocionesServices>(Behavior.Strict);
+            _accountService = new Mock<IAccountService>();
+            _accountValidation= new Mock<IAccountValidation>();
+            _logger = new Mock<ILogger<AccountController>>();
             _cancellationToken = new CancellationToken();
 
-            _promocionesController = new PromocionesController(_promocionesServices);
+            InitializeFakeVariables();
+
+            _accountController = new AccountController(_accountService.Object, _accountValidation.Object, _logger.Object);
         }
 
-        [Test]
-        public async Task GetListAsync_Returns_List()
+        //[Test]
+        public async Task RegisterAsync_WithValidDto_ReturnsOk()
         {
             //Arrange
-            var list = new List<Promocion>
-            {
-                new Promocion()
-            };
-            Mock.Arrange(() => _promocionesServices.GetListAsync(_cancellationToken)).Returns(Task.FromResult(list));
+            //_accountService.Setup(x => x.RegisterAsync(_validRequest, "", _cancellationToken)).Returns(Task.FromResult());
 
             //Act
-            var result = await _promocionesController.GetListAsync(_cancellationToken);
+            var result = await _accountController.RegisterAsync(_validRequest, _cancellationToken);
 
             //Assert
             Assert.That(result, Is.Not.Null);
-            Assert.That(result, Is.TypeOf<OkObjectResult>());
-            Assert.That((result as OkObjectResult)?.Value, Is.TypeOf<List<Promocion>>());
+            Assert.That(result, Is.TypeOf<CreatedAtRouteResult>());
+            //Assert.That((result as CreatedAtRouteResult)?.Value, Is.TypeOf<List<Promocion>>());
         }
+
+        [Test]
+        public async Task ConfirmEmailAsync_WithRightToken_ReturnsOK()
+        {
+            //Arrange
+            var token = "test";
+            var email = "test@hotmail.com";
+
+            //_accountService.Setup(x => x.RegisterAsync(_validRequest, "", _cancellationToken)).Returns(Task.FromResult(new IdentityResult().Succeeded));
+
+            //Act
+            var result = await _accountController.ConfirmEmailAsync(email, token, _cancellationToken);
+
+            //Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.TypeOf<CreatedAtRouteResult>());
+            //Assert.That((result as CreatedAtRouteResult)?.Value, Is.TypeOf<List<Promocion>>());
+        }
+
+
+        private void InitializeFakeVariables()
+        {
+            _validRequest = new RegisterRequestDto
+            {
+                Email = "test@hotmail.com",
+                Password = "Password123!",
+            };
+        }
+
 
         [Test]
         public async Task GetAsync_Returns_Promotion()

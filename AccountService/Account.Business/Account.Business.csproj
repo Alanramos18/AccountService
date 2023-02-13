@@ -14,4 +14,8 @@
     <ProjectReference Include="..\Account.Dto\Account.Dto.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Assets\Html\" />
+  </ItemGroup>
+
 </Project>

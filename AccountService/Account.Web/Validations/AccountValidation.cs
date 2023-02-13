@@ -27,7 +27,7 @@ namespace Account.Web.Validations
         ///     Validate the email.
         /// </summary>
         /// <param name="email">Email</param>
-        public void ValidateEmail(string email)
+        public void ValidateEmail(string? email)
         {
             string regex = @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$";
 
@@ -43,7 +43,7 @@ namespace Account.Web.Validations
         ///     Validate the user password.
         /// </summary>
         /// <param name="password">User Password</param>
-        private void ValidatePassword(string password)
+        private void ValidatePassword(string? password)
         {
             if (string.IsNullOrEmpty(password))
             {

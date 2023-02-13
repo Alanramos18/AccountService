@@ -1,4 +1,4 @@
-﻿using Account.Business.Utils;
+﻿using System;
 using Account.Data.Entities;
 using Account.Dto.WebDtos;
 
@@ -15,7 +15,8 @@ namespace Account.Business.Mappers.CreateAccount
             {
                 Email = dto.Email,
                 ApplicationCode = source,
-                Verification = (int)Constants.AccountVerified.NotVerified
+                UserName = "Tesdfsdfst",
+                SecurityStamp = Guid.NewGuid().ToString()
             };
 
             return account;
